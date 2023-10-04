@@ -36,26 +36,34 @@ class NumberLinkSolver:
         while True:
             self.print_board()
             try:
-                row1, col1, row2, col2 = map(
-                    int,
-                    input(
-                        "Ingresa las coordenadas (fila1, columna1, fila2, columna2) o 'q' para salir: "
+                coordinates = list(
+                    map(
+                        int,
+                        input(
+                            "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
+                        )
+                        .strip()
+                        .split(),
                     )
-                    .strip()
-                    .split(),
                 )
-                if row1 == row2 and col1 == col2:
-                    print("Las coordenadas deben ser diferentes.")
+                if len(coordinates) % 2 != 0:
+                    print("Debes ingresar un número par de coordenadas.")
                     continue
-                if self.is_valid_move(row1, col1, row2, col2):
-                    self.connect_cells(row1, col1, row2, col2)
-                    if self.is_game_over():
-                        print("¡Has ganado! ¡Todas las celdas están conectadas!")
-                        break
-                else:
-                    print(
-                        "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
-                    )
+                number_to_connect = input("Ingresa el número que deseas conectar: ")
+                for i in range(0, len(coordinates), 2):
+                    row1, col1 = coordinates[i], coordinates[i + 1]
+                    if i + 2 < len(coordinates):
+                        row2, col2 = coordinates[i + 2], coordinates[i + 3]
+                        if self.is_valid_move(row1, col1, row2, col2):
+                            self.connect_cells(row1, col1, row2, col2, number_to_connect)
+                        else:
+                            print(
+                                "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
+                            )
+                            break
+                if self.is_game_over():
+                    print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                    break
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
                     break
@@ -73,15 +81,13 @@ class NumberLinkSolver:
                 abs(row1 - row2) == 1 and col1 == col2
                 or abs(col1 - col2) == 1 and row1 == row2
             )
-            and self.board[row1 - 1][col1 - 1] == " "
             and self.board[row2 - 1][col2 - 1] == " "
         ):
             return True
         return False
 
-    def connect_cells(self, row1, col1, row2, col2):
+    def connect_cells(self, row1, col1, row2, col2, number_to_connect):
         # Conecta las celdas en el tablero y registra la conexión
-        number_to_connect = input("Ingresa el número que deseas conectar: ")
         self.board[row1 - 1][col1 - 1] = number_to_connect
         self.board[row2 - 1][col2 - 1] = number_to_connect
         self.connections.append(((row1, col1), (row2, col2)))
