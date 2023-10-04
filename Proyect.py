@@ -63,6 +63,8 @@ class NumberLinkSolver:
                             break
                 if self.is_game_over():
                     print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                    print("Este es tu tablero final:")
+                    self.print_board()
                     break
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
