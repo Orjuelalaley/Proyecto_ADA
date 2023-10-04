@@ -34,55 +34,9 @@ class NumberLinkSolver:
             print("|")
         print(horizontal_line)
 
-    def solve_game(self):
-        def dfs(row, col, value, visited):
-            visited.add((row, col))
-
-            # Búsqueda hacia arriba
-            if (
-                row > 0
-                and self.board[row - 1][col] == value
-                and (row - 1, col) not in visited
-            ):
-                self.connect_cells(row, col, row - 1, col)
-                dfs(row - 1, col, value, visited)
-
-            # Búsqueda hacia abajo
-            if (
-                row < self.rows - 1
-                and self.board[row + 1][col] == value
-                and (row + 1, col) not in visited
-            ):
-                self.connect_cells(row, col, row + 1, col)
-                dfs(row + 1, col, value, visited)
-
-            # Búsqueda hacia la izquierda
-            if (
-                col > 0
-                and self.board[row][col - 1] == value
-                and (row, col - 1) not in visited
-            ):
-                self.connect_cells(row, col, row, col - 1)
-                dfs(row, col - 1, value, visited)
-
-            # Búsqueda hacia la derecha
-            if (
-                col < self.cols - 1
-                and self.board[row][col + 1] == value
-                and (row, col + 1) not in visited
-            ):
-                self.connect_cells(row, col, row, col + 1)
-                dfs(row, col + 1, value, visited)
-
-        for row in range(self.rows):
-            for col in range(self.cols):
-                value = self.board[row][col]
-                if value != " ":
-                    visited = set()
-                    dfs(row, col, value, visited)
-
-        print("Tablero resuelto:")
-        self.print_board()
+    def solve(self):
+        # Implementa tu algoritmo de resolución aquí
+        pass
 
 
 if __name__ == "__main__":
@@ -92,6 +46,4 @@ if __name__ == "__main__":
     if solver.read_input_file(input_file):
         print("Tablero de entrada:")
         solver.print_board()
-
-        # Llama a tu función para resolver el juego
-        solver.solve_game()
+        solver.solve()
