@@ -20,6 +20,8 @@ class NumberLinkSolver:
             self.cols = 0
             self.board = None
 
+        self.connections = []  # Lista para almacenar las conexiones de los números
+
     def print_board(self):
         horizontal_line = "+---" * self.cols + "+"
 
@@ -62,15 +64,34 @@ class NumberLinkSolver:
 
     def is_valid_move(self, row1, col1, row2, col2):
         # Verifica si el movimiento es válido (celdas adyacentes y vacías)
-        pass
+        if (
+            1 <= row1 <= self.rows
+            and 1 <= col1 <= self.cols
+            and 1 <= row2 <= self.rows
+            and 1 <= col2 <= self.cols
+            and (
+                abs(row1 - row2) == 1 and col1 == col2
+                or abs(col1 - col2) == 1 and row1 == row2
+            )
+            and self.board[row1 - 1][col1 - 1] == " "
+            and self.board[row2 - 1][col2 - 1] == " "
+        ):
+            return True
+        return False
 
     def connect_cells(self, row1, col1, row2, col2):
-        # Conecta las celdas en el tablero
-        pass
+        # Conecta las celdas en el tablero y registra la conexión
+        number_to_connect = input("Ingresa el número que deseas conectar: ")
+        self.board[row1 - 1][col1 - 1] = number_to_connect
+        self.board[row2 - 1][col2 - 1] = number_to_connect
+        self.connections.append(((row1, col1), (row2, col2)))
 
     def is_game_over(self):
         # Verifica si se ha completado el juego
-        pass
+        for row in self.board:
+            if " " in row:
+                return False
+        return True
 
 
 if __name__ == "__main__":
