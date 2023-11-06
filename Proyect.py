@@ -1,5 +1,6 @@
 import sys
 
+
 class NumberLinkSolver:
     def __init__(self, filename):
         try:
@@ -9,20 +10,27 @@ class NumberLinkSolver:
 
                 # Inicializa el tablero con celdas vacías
                 self.board = [[" " for _ in range(self.cols)] for _ in range(self.rows)]
-
+                self.original_numbers = (
+                    {}
+                )  # Diccionario para almacenar los números originales
                 # Procesa las ubicaciones de las parejas
                 for line in lines[1:]:
                     pair_data = list(map(int, line.strip().split(",")))
-                    row, col, value = pair_data
-                    self.board[row - 1][col - 1] = str(value)
-
+                    if len(pair_data) == 3:
+                        row, col, value = pair_data
+                        self.original_numbers[(row, col)] = value
+                        self.board[row - 1][col - 1] = str(value)
+                    else:
+                        row1, col1, row2, col2 = pair_data
+                        self.board[row1 - 1][col1 - 1] = " "
+                        self.board[row2 - 1][col2 - 1] = " "
         except Exception as e:
             print(f"Error al leer el archivo de entrada: {e}")
             self.rows = 0
             self.cols = 0
             self.board = None
 
-        self.connections = []   # Lista para almacenar las conexiones de los números
+        self.connections = []  # Lista para almacenar las conexiones de los números
 
     def print_board(self):
         horizontal_line = "+---" * self.cols + "+"
@@ -38,16 +46,15 @@ class NumberLinkSolver:
         while True:
             self.print_board()
             try:
-                coordinates = list(
-                    map(
-                        int,
-                        input(
-                            "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
-                        )
-                        .strip()
-                        .split(),
-                    )
-                )
+                user_input = input(
+                    "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
+                ).strip()
+
+                if user_input.lower() == "q":
+                    break  # Salir del bucle si se ingresa 'q'
+
+                coordinates = list(map(int, user_input.split()))
+
                 if len(coordinates) % 2 != 0:
                     print("Debes ingresar un número par de coordenadas.")
                     continue
@@ -90,6 +97,11 @@ class NumberLinkSolver:
                 and row1 == row2
             )
             and self.board[row2 - 1][col2 - 1] == " "
+            and self.board[row1 - 1][col1 - 1] == " "
+            and ((row1, col1), (row2, col2)) not in self.connections
+            and ((row2, col2), (row1, col1)) not in self.connections
+            and ((row1, col1), (row2, col2)) not in self.original_numbers.keys()
+            and ((row2, col2), (row1, col1)) not in self.original_numbers.keys()
         ):
             return True
         return False
@@ -118,4 +130,6 @@ if __name__ == "__main__":
             print("Tablero de entrada:")
             solver.play()
         else:
-            print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
+            print(
+                "No se pudo cargar el tablero inicial. Verifica el archivo de entrada."
+            )
