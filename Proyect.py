@@ -55,7 +55,9 @@ class NumberLinkSolver:
                     if i + 2 < len(coordinates):
                         row2, col2 = coordinates[i + 2], coordinates[i + 3]
                         if self.is_valid_move(row1, col1, row2, col2):
-                            self.connect_cells(row1, col1, row2, col2, number_to_connect)
+                            self.connect_cells(
+                                row1, col1, row2, col2, number_to_connect
+                            )
                         else:
                             print(
                                 "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
@@ -78,8 +80,10 @@ class NumberLinkSolver:
             and 1 <= row2 <= self.rows
             and 1 <= col2 <= self.cols
             and (
-                abs(row1 - row2) == 1 and col1 == col2
-                or abs(col1 - col2) == 1 and row1 == row2
+                abs(row1 - row2) == 1
+                and col1 == col2
+                or abs(col1 - col2) == 1
+                and row1 == row2
             )
             and self.board[row2 - 1][col2 - 1] == " "
         ):
