@@ -1,3 +1,5 @@
+import sys
+
 class NumberLinkSolver:
     def __init__(self, filename):
         try:
@@ -20,7 +22,7 @@ class NumberLinkSolver:
             self.cols = 0
             self.board = None
 
-        self.connections = []  # Lista para almacenar las conexiones de los números
+        self.connections = []   # Lista para almacenar las conexiones de los números
 
     def print_board(self):
         horizontal_line = "+---" * self.cols + "+"
@@ -65,6 +67,8 @@ class NumberLinkSolver:
                             break
                 if self.is_game_over():
                     print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                    print("Este es tu tablero final:")
+                    self.print_board()
                     break
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
@@ -105,10 +109,13 @@ class NumberLinkSolver:
 
 
 if __name__ == "__main__":
-    input_file = "inputfile.txt"
-    solver = NumberLinkSolver(input_file)
-    if solver.rows > 0 and solver.cols > 0 and solver.board is not None:
-        print("Tablero de entrada:")
-        solver.play()
+    if len(sys.argv) != 2:
+        print("Uso: python tu_script.py archivo.txt")
     else:
-        print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
+        input_file = sys.argv[1]
+        solver = NumberLinkSolver(input_file)
+        if solver.rows > 0 and solver.cols > 0 and solver.board is not None:
+            print("Tablero de entrada:")
+            solver.play()
+        else:
+            print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
