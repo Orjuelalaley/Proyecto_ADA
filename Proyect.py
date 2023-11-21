@@ -44,7 +44,6 @@ class NumberLinkSolver:
 
     def play(self):
         while True:
-            self.print_board()
             try:
                 user_input = input(
                     "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
@@ -77,6 +76,9 @@ class NumberLinkSolver:
                     print("Este es tu tablero final:")
                     self.print_board()
                     break
+                else:
+                    self.print_board()
+
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
                     break
@@ -120,16 +122,38 @@ class NumberLinkSolver:
         return True
 
 
-if __name__ == "__main__":
+def main():
+    print("Bienvenido al juego NumberLink")
+    print("¿Quieres que la máquina juegue por ti? (s/n)")
+
+    # Tomar la decisión del usuario
+    decision_usuario = input().strip().lower()
+    if decision_usuario not in ["s", "n"]:
+        print("Por favor, ingresa 's' para sí o 'n' para no.")
+        return
+
+    # Leer el archivo de entrada
     if len(sys.argv) != 2:
         print("Uso: python tu_script.py archivo.txt")
+        return
+    input_file = sys.argv[1]
+
+    # Crear el solucionador
+    solver = NumberLinkSolver(input_file)
+
+    if solver.rows <= 0 or solver.cols <= 0 or solver.board is None:
+        print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
+        return
+
+    print("Tablero de entrada:")
+    solver.print_board()  # Asumiendo que solver tiene un método para imprimir el tablero
+
+    # Jugar automáticamente o esperar la entrada del usuario
+    if decision_usuario == "s":
+        solver.play_auto()  # Asumiendo que play_auto es un método que juega automáticamente
     else:
-        input_file = sys.argv[1]
-        solver = NumberLinkSolver(input_file)
-        if solver.rows > 0 and solver.cols > 0 and solver.board is not None:
-            print("Tablero de entrada:")
-            solver.play()
-        else:
-            print(
-                "No se pudo cargar el tablero inicial. Verifica el archivo de entrada."
-            )
+        solver.play()  # Asumiendo que play es un método para juego manual
+
+
+if __name__ == "__main__":
+    main()
