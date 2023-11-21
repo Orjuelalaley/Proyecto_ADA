@@ -1,7 +1,6 @@
 import sys
 from collections import deque
 
-
 class NumberLinkSolver:
     def __init__(self, filename):
         try:
@@ -120,7 +119,7 @@ class NumberLinkSolver:
             ):
                 return True
             return False
-            
+
     def connect_single_cell(self, row, col, number_to_connect):
         # Conecta una sola celda en el tablero con un número específico
         self.board[row - 1][col - 1] = number_to_connect
@@ -129,7 +128,7 @@ class NumberLinkSolver:
         # Conecta las celdas en el tablero y registra la conexión
         self.board[row1 - 1][col1 - 1] = number_to_connect
         self.board[row2 - 1][col2 - 1] = number_to_connect
-        self.connections.append(((row1, col1), (row2, col2)))    
+        self.connections.append(((row1, col1), (row2, col2)))
 
     def is_game_over(self):
     # Verifica si se ha completado el juego
@@ -137,7 +136,7 @@ class NumberLinkSolver:
             if " " in row or "X" in row:  # Se añade "X" a las condiciones de finalización del juego
                 return False
         return True
-    
+
     def find_number_coordinates(self, number):
         # Encuentra las coordenadas de un número en el tablero
         coordinates = []
@@ -157,7 +156,6 @@ class NumberLinkSolver:
         for number in unique_numbers:
             grouped_numbers[number] = self.find_number_coordinates(number)
         return grouped_numbers
-
 
     def solve_by_heuristic(self):
         grouped_numbers = self.group_numbers()
@@ -197,8 +195,6 @@ class NumberLinkSolver:
         print("Tablero después de la resolución:")
         self.print_board()
 
-
-
     def find_all_paths(self, start, end):
         queue = deque()
         queue.append((start, [start]))  
@@ -212,10 +208,10 @@ class NumberLinkSolver:
             if current == end:
                 all_paths.append(path)
             row, col = current
-            
+
             # Direcciones posibles
             possible_moves = [
-                (row - 1, col), (row + 1, col),  
+                (row - 1, col), (row + 1, col),
                 (row, col - 1), (row, col + 1),
                 (row - 2, col - 1), (row - 2, col + 1),
                 (row + 2, col - 1), (row + 2, col + 1),
@@ -238,9 +234,6 @@ class NumberLinkSolver:
                     queue.append((move, path + [move]))
                     visited.add(move)
         return all_paths
-
-
-
 
     def bfs_shortest_path(self, start, end):
         queue = deque()
@@ -280,6 +273,36 @@ class NumberLinkSolver:
 
         return None  # Si no se encuentra un camino
 
+    def solve_exhaustively(self):
+        # Encuentra una solución exhaustivamente
+        self.exhaustive_solution_found = False  # Variable para verificar si se encontró una solución
+        self.exhaustive_search(1)
+
+        if self.exhaustive_solution_found:
+            print("¡Se encontró una solución!")
+            self.print_board()
+        else:
+            print("No se encontró una solución.")
+
+    def exhaustive_search(self, number_to_connect):
+        if number_to_connect > max(self.original_numbers.values()):
+            self.exhaustive_solution_found = True
+            return
+
+        for row1 in range(1, self.rows + 1):
+            for col1 in range(1, self.cols + 1):
+                if self.board[row1 - 1][col1 - 1] == " ":
+                    for row2 in range(1, self.rows + 1):
+                        for col2 in range(1, self.cols + 1):
+                            if self.board[row2 - 1][col2 - 1] == " ":
+                                if self.is_valid_move(row1, col1, row2, col2):
+                                    self.connect_cells(row1, col1, row2, col2, str(number_to_connect))
+                                    self.exhaustive_search(number_to_connect + 1)
+                                    if self.exhaustive_solution_found:
+                                        return
+                                    self.board[row1 - 1][col1 - 1] = " "
+                                    self.board[row2 - 1][col2 - 1] = " "
+
 def main():
     print("Bienvenido al juego NumberLink")
     print("¿Quieres resolverlo tú mismo? (s/n/q)")
@@ -308,7 +331,8 @@ def main():
         return
 
     print("Tablero de entrada:")
-    solver.print_board()  # Asumiendo que solver tiene un método para imprimir el tablero
+    solver.print_board()
+
 
     # Jugar o resolver automáticamente según la elección del usuario
     if decision_usuario == "s":
