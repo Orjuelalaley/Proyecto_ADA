@@ -46,7 +46,7 @@ class NumberLinkSolver:
         while True:
             try:
                 user_input = input(
-                    "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
+                    "Ingresa las coordenadas (fila, columna) o 'q' para salir: "
                 ).strip()
 
                 if user_input.lower() == "q":
@@ -54,30 +54,42 @@ class NumberLinkSolver:
 
                 coordinates = list(map(int, user_input.split()))
 
-                if len(coordinates) % 2 != 0:
+                if len(coordinates) == 2:  # Si se ingresa solo una coordenada
+                    row1, col1 = coordinates
+                    number_to_connect = input("Ingresa el número que deseas conectar: ")
+                    self.connect_single_cell(row1, col1, number_to_connect)
+                    if self.is_game_over():
+                        print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                        print("Este es tu tablero final:")
+                        self.print_board()
+                        break
+                    else:
+                        self.print_board()
+                elif len(coordinates) % 2 != 0:
                     print("Debes ingresar un número par de coordenadas.")
                     continue
-                number_to_connect = input("Ingresa el número que deseas conectar: ")
-                for i in range(0, len(coordinates), 2):
-                    row1, col1 = coordinates[i], coordinates[i + 1]
-                    if i + 2 < len(coordinates):
-                        row2, col2 = coordinates[i + 2], coordinates[i + 3]
-                        if self.is_valid_move(row1, col1, row2, col2):
-                            self.connect_cells(
-                                row1, col1, row2, col2, number_to_connect
-                            )
-                        else:
-                            print(
-                                "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
-                            )
-                            break
-                if self.is_game_over():
-                    print("¡Has ganado! ¡Todas las celdas están conectadas!")
-                    print("Este es tu tablero final:")
-                    self.print_board()
-                    break
                 else:
-                    self.print_board()
+                    number_to_connect = input("Ingresa el número que deseas conectar: ")
+                    for i in range(0, len(coordinates), 2):
+                        row1, col1 = coordinates[i], coordinates[i + 1]
+                        if i + 2 < len(coordinates):
+                            row2, col2 = coordinates[i + 2], coordinates[i + 3]
+                            if self.is_valid_move(row1, col1, row2, col2):
+                                self.connect_cells(
+                                    row1, col1, row2, col2, number_to_connect
+                                )
+                            else:
+                                print(
+                                    "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
+                                )
+                                break
+                    if self.is_game_over():
+                        print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                        print("Este es tu tablero final:")
+                        self.print_board()
+                        break
+                    else:
+                        self.print_board()
 
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
@@ -86,38 +98,42 @@ class NumberLinkSolver:
                     continue
 
     def is_valid_move(self, row1, col1, row2, col2):
-        # Verifica si el movimiento es válido (celdas adyacentes y vacías)
-        if (
-            1 <= row1 <= self.rows
-            and 1 <= col1 <= self.cols
-            and 1 <= row2 <= self.rows
-            and 1 <= col2 <= self.cols
-            and (
-                abs(row1 - row2) == 1
-                and col1 == col2
-                or abs(col1 - col2) == 1
-                and row1 == row2
-            )
-            and self.board[row2 - 1][col2 - 1] == " "
-            and self.board[row1 - 1][col1 - 1] == " "
-            and ((row1, col1), (row2, col2)) not in self.connections
-            and ((row2, col2), (row1, col1)) not in self.connections
-            and ((row1, col1), (row2, col2)) not in self.original_numbers.keys()
-            and ((row2, col2), (row1, col1)) not in self.original_numbers.keys()
-        ):
-            return True
-        return False
+            # Verifica si el movimiento es válido (celdas adyacentes y vacías)
+            if (
+                1 <= row1 <= self.rows
+                and 1 <= col1 <= self.cols
+                and 1 <= row2 <= self.rows
+                and 1 <= col2 <= self.cols
+                and (
+                    abs(row1 - row2) == 1
+                    and col1 == col2
+                    or abs(col1 - col2) == 1
+                    and row1 == row2
+                )
+                and self.board[row2 - 1][col2 - 1] == " "
+                and self.board[row1 - 1][col1 - 1] == " "
+                and ((row1, col1), (row2, col2)) not in self.connections
+                and ((row2, col2), (row1, col1)) not in self.connections
+                and ((row1, col1), (row2, col2)) not in self.original_numbers.keys()
+                and ((row2, col2), (row1, col1)) not in self.original_numbers.keys()
+            ):
+                return True
+            return False
+            
+    def connect_single_cell(self, row, col, number_to_connect):
+        # Conecta una sola celda en el tablero con un número específico
+        self.board[row - 1][col - 1] = number_to_connect
 
     def connect_cells(self, row1, col1, row2, col2, number_to_connect):
         # Conecta las celdas en el tablero y registra la conexión
         self.board[row1 - 1][col1 - 1] = number_to_connect
         self.board[row2 - 1][col2 - 1] = number_to_connect
-        self.connections.append(((row1, col1), (row2, col2)))
+        self.connections.append(((row1, col1), (row2, col2)))    
 
     def is_game_over(self):
-        # Verifica si se ha completado el juego
+    # Verifica si se ha completado el juego
         for row in self.board:
-            if " " in row:
+            if " " in row or "X" in row:  # Se añade "X" a las condiciones de finalización del juego
                 return False
         return True
 
