@@ -1,5 +1,25 @@
 import sys
-from collections import deque
+import random
+
+class UnionFind:
+    def __init__(self, size):
+        self.parent = list(range(size))
+        self.rank = [0] * size
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        rootX = self.find(x)
+        rootY = self.find(y)
+        if rootX != rootY:
+            if self.rank[rootX] < self.rank[rootY]:
+                rootX, rootY = rootY, rootX
+            self.parent[rootY] = rootX
+            if self.rank[rootX] == self.rank[rootY]:
+                self.rank[rootX] += 1
 
 class NumberLinkSolver:
     def __init__(self, filename):
@@ -8,11 +28,9 @@ class NumberLinkSolver:
                 lines = file.readlines()
                 self.rows, self.cols = map(int, lines[0].strip().split(","))
 
-                # Inicializa el tablero con celdas vacías
                 self.board = [[" " for _ in range(self.cols)] for _ in range(self.rows)]
                 self.original_numbers = {}
 
-                # Procesa las ubicaciones de las parejas
                 for line in lines[1:]:
                     pair_data = list(map(int, line.strip().split(",")))
                     if len(pair_data) == 3:
@@ -33,7 +51,6 @@ class NumberLinkSolver:
 
     def print_board(self):
         horizontal_line = "+---" * self.cols + "+"
-
         for i in range(self.rows):
             print(horizontal_line)
             for j in range(self.cols):
@@ -43,9 +60,10 @@ class NumberLinkSolver:
 
     def play(self):
         while True:
+            self.print_board()
             try:
                 user_input = input(
-                    "Ingresa las coordenadas (fila, columna) o 'q' para salir: "
+                    "Ingresa las coordenadas (fila1, columna1, fila2, columna2,...) o 'q' para salir: "
                 ).strip()
 
                 if user_input.lower() == "q":
@@ -53,43 +71,26 @@ class NumberLinkSolver:
 
                 coordinates = list(map(int, user_input.split()))
 
-                if len(coordinates) == 2:
-                    row1, col1 = coordinates
-                    number_to_connect = input("Ingresa el número que deseas conectar: ")
-                    self.connect_single_cell(row1, col1, number_to_connect)
-                    if self.is_game_over():
-                        print("¡Has ganado! ¡Todas las celdas están conectadas!")
-                        print("Este es tu tablero final:")
-                        self.print_board()
-                        break
-                    else:
-                        self.print_board()
-                elif len(coordinates) % 2 != 0:
+                if len(coordinates) % 2 != 0:
                     print("Debes ingresar un número par de coordenadas.")
                     continue
-                else:
-                    number_to_connect = input("Ingresa el número que deseas conectar: ")
-                    for i in range(0, len(coordinates), 2):
-                        row1, col1 = coordinates[i], coordinates[i + 1]
-                        if i + 2 < len(coordinates):
-                            row2, col2 = coordinates[i + 2], coordinates[i + 3]
-                            if self.is_valid_move(row1, col1, row2, col2):
-                                self.connect_cells(
-                                    row1, col1, row2, col2, number_to_connect
-                                )
-                            else:
-                                print(
-                                    "Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías."
-                                )
-                                break
-                    if self.is_game_over():
-                        print("¡Has ganado! ¡Todas las celdas están conectadas!")
-                        print("Este es tu tablero final:")
-                        self.print_board()
-                        break
-                    else:
-                        self.print_board()
 
+                number_to_connect = input("Ingresa el número que deseas conectar: ")
+                for i in range(0, len(coordinates), 2):
+                    row1, col1 = coordinates[i], coordinates[i + 1]
+                    if i + 2 < len(coordinates):
+                        row2, col2 = coordinates[i + 2], coordinates[i + 3]
+                        if self.is_valid_move(row1, col1, row2, col2):
+                            self.connect_cells(row1, col1, row2, col2, number_to_connect)
+                        else:
+                            print("Movimiento inválido. Asegúrate de que las celdas sean adyacentes y estén vacías.")
+                            break
+
+                if self.is_game_over():
+                    print("¡Has ganado! ¡Todas las celdas están conectadas!")
+                    print("Este es tu tablero final:")
+                    self.print_board()
+                    break
             except ValueError:
                 if input("¿Deseas salir del juego? (S/N): ").strip().lower() == "s":
                     break
@@ -118,9 +119,6 @@ class NumberLinkSolver:
             return True
         return False
 
-    def connect_single_cell(self, row, col, number_to_connect):
-        self.board[row - 1][col - 1] = number_to_connect
-
     def connect_cells(self, row1, col1, row2, col2, number_to_connect):
         self.board[row1 - 1][col1 - 1] = number_to_connect
         self.board[row2 - 1][col2 - 1] = number_to_connect
@@ -128,201 +126,84 @@ class NumberLinkSolver:
 
     def is_game_over(self):
         for row in self.board:
-            if " " in row or "X" in row:
+            if " " in row:
                 return False
         return True
 
-    def find_number_coordinates(self, number):
-        coordinates = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.board[i][j] == str(number):
-                    coordinates.append((i + 1, j + 1))
-        return coordinates
+    def get_valid_neighbors(self, row, col):
+        neighbors = []
+        for drow, dcol in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            nrow, ncol = row + drow, col + dcol
+            if 0 <= nrow < self.rows and 0 <= ncol < self.cols and self.board[nrow][ncol] == " ":
+                neighbors.append((nrow, ncol))
+        return neighbors
 
-    def group_numbers(self):
-        unique_numbers = set()
-        for pair in self.original_numbers:
-            value = self.original_numbers[pair]
-            unique_numbers.add(value)
+    def generate_path(self):
+        uf = UnionFind(self.rows * self.cols)
 
-        grouped_numbers = {}
-        for number in unique_numbers:
-            grouped_numbers[number] = self.find_number_coordinates(number)
-        return grouped_numbers
+        while True:
+            empty_cells = [(r, c) for r in range(self.rows) for c in range(self.cols) if self.board[r][c] == " "]
+            if not empty_cells:
+                print("No hay más celdas vacías.")
+                break
 
-    def solve_by_heuristic(self):
-        grouped_numbers = self.group_numbers()
+            while empty_cells:
+                cell1 = random.choice(empty_cells)
+                neighbors = self.get_valid_neighbors(*cell1)
+                if neighbors:
+                    break
+                else:
+                    print(f"No se encontraron vecinos válidos para la celda {cell1}.")
+                    empty_cells.remove(cell1)  # Eliminar la celda sin vecinos válidos
+
+            if not neighbors:  # Si no se encontraron vecinos para ninguna celda vacía
+                break
+
+            # Encontrar un número para conectar
+            number_to_connect = self.find_number_to_connect(cell1)
+
+            cell2 = random.choice(neighbors)
+            uf.union(cell1[0] * self.cols + cell1[1], cell2[0] * self.cols + cell2[1])
+            self.connect_cells(cell1[0]+1, cell1[1]+1, cell2[0]+1, cell2[1]+1, number_to_connect)
+
+            while True:
+                new_neighbors = [n for n in self.get_valid_neighbors(*cell2) if uf.find(n[0] * self.cols + n[1]) != uf.find(cell2[0] * self.cols + cell2[1])]
+                if not new_neighbors:
+                    break
+
+                cell1, cell2 = cell2, random.choice(new_neighbors)
+                uf.union(cell1[0] * self.cols + cell1[1], cell2[0] * self.cols + cell2[1])
+                self.connect_cells(cell1[0]+1, cell1[1]+1, cell2[0]+1, cell2[1]+1, number_to_connect)
+
+        print("Generación de caminos completada.")
+
+    def find_number_to_connect(self, cell):
+        # Buscar en la celda actual
+        if self.board[cell[0]][cell[1]].isdigit():
+            return self.board[cell[0]][cell[1]]
         
-        # Diccionario para almacenar todas las rutas por número
-        all_paths = {number: [] for number in grouped_numbers.keys()}
+        # Buscar en las celdas vecinas
+        neighbors = self.get_valid_neighbors(*cell)
+        for n in neighbors:
+            if self.board[n[0]][n[1]].isdigit():
+                return self.board[n[0]][n[1]]
         
-        for number, group in grouped_numbers.items():
-            if len(group) >= 2:
-                for i in range(len(group)):
-                    for j in range(i + 1, len(group)):
-                        start = group[i]
-                        end = group[j]
-                        print(f"Buscando todas las rutas entre {start} y {end} para el número {number}...")
-                        found_paths = self.find_all_paths(start, end)
-                        if found_paths:
-                            for found_path in found_paths:
-                                # Obtener la longitud de la ruta actual
-                                path_length = len(found_path) - 1
-                                all_paths[number].append((end, path_length, found_path))
-                                # Actualizar el tablero solo con la ruta encontrada
-                                for coord in found_path[1:-1]:
-                                    row, col = coord
-                                    if (row, col) not in self.original_numbers:
-                                        self.board[row - 1][col - 1] = str(number)
-                                print(f"Tablero después de encontrar una ruta entre {start} y {end} para el número {number}:")
-                                self.print_board()
-                        else:
-                            print(f"No se encontró una ruta entre {start} y {end} para el número {number}.")
-
-        # Resolver el tablero utilizando las rutas encontradas
-        self.solve_with_all_paths(all_paths)
-        
-        print("Tablero después de la resolución:")
-        self.print_board()
-
-    def find_all_paths(self, start, end):
-        queue = deque()
-        queue.append((start, [start]))  
-
-        all_paths = []
-        visited = set()
-        visited.add(start)
-
-        while queue:
-            current, path = queue.popleft()
-            if current == end:
-                all_paths.append(path)
-            row, col = current
-            
-            possible_moves = [
-                (row - 1, col), (row + 1, col),  
-                (row, col - 1), (row, col + 1),
-                (row - 2, col - 1), (row - 2, col + 1),
-                (row + 2, col - 1), (row + 2, col + 1),
-                (row - 1, col - 2), (row + 1, col - 2),
-                (row - 1, col + 2), (row + 1, col + 2)
-            ]
-
-            for move in possible_moves:
-                if (
-                    0 <= move[0] < self.rows and
-                    0 <= move[1] < self.cols and
-                    (self.board[move[0]][move[1]] == " " or self.board[move[0]][move[1]] == str(end)) and
-                    move not in path and move not in visited
-                ):
-                    if start != end:
-                        shortest_path = self.bfs_shortest_path(current, end)
-                        if shortest_path:
-                            all_paths.append(path + shortest_path[1:])
-                            continue
-                    queue.append((move, path + [move]))
-                    visited.add(move)
-        return all_paths
-
-    def bfs_shortest_path(self, start, end):
-        queue = deque()
-        queue.append(start)
-        visited = set()
-        visited.add(start)
-        parents = {}
-
-        while queue:
-            current = queue.popleft()
-            if current == end:
-                path = []
-                while current != start:
-                    path.append(current)
-                    current = parents[current]
-                path.append(start)
-                return path[::-1]
-
-            row, col = current
-            neighbors = [
-                (row - 1, col),
-                (row + 1, col),
-                (row, col - 1),
-                (row, col + 1)
-            ]
-
-            for neighbor in neighbors:
-                if (
-                    0 <= neighbor[0] < self.rows and
-                    0 <= neighbor[1] < self.cols and
-                    self.board[neighbor[0]][neighbor[1]] == " " and
-                    neighbor not in visited
-                ):
-                    queue.append(neighbor)
-                    visited.add(neighbor)
-                    parents[neighbor] = current
-
-        return None  # Si no se encuentra un camino
-
-    def solve_with_all_paths(self, all_paths):
-        def backtrack(number_index):
-            if number_index == len(unique_numbers):
-                return True
-            
-            number = unique_numbers[number_index]
-            paths = all_paths[number]
-            paths.sort(key=lambda x: x[1])
-            
-            for end, _, found_path in paths:
-                for coord in found_path[1:-1]:
-                    row, col = coord
-                    if (row, col) not in self.original_numbers:
-                        self.board[row - 1][col - 1] = str(number)
-                if backtrack(number_index + 1):
-                    return True
-                for coord in found_path[1:-1]:
-                    row, col = coord
-                    if (row, col) not in self.original_numbers:
-                        self.board[row - 1][col - 1] = " "
-            
-            return False
-        
-        unique_numbers = list(all_paths.keys())
-        if backtrack(0):
-            print("¡Has ganado! ¡Todas las celdas están conectadas!")
-        else:
-            print("No se encontró una solución válida.")
-
-def main():
-    print("Bienvenido al juego NumberLink")
-    print("¿Quieres resolverlo tú mismo? (s/n/q)")
-
-    decision_usuario = input().strip().lower()
-    if decision_usuario not in ["s", "n", "q"]:
-        print("Por favor, ingresa 's' para resolverlo tú mismo, 'n' para dejar que la máquina lo haga, o 'q' para salir.")
-        return
-
-    if decision_usuario == "q":
-        print("Saliendo del juego...")
-        return
-
-    if len(sys.argv) != 2:
-        print("Uso: python tu_script.py archivo.txt")
-        return
-    input_file = sys.argv[1]
-
-    solver = NumberLinkSolver(input_file)
-
-    if solver.rows <= 0 or solver.cols <= 0 or solver.board is None:
-        print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
-        return
-
-    print("Tablero de entrada:")
-    solver.print_board()
-
-    if decision_usuario == "s":
-        solver.play()
-    elif decision_usuario == "n":
-        solver.solve_by_heuristic()
+        return "#"  # Por defecto, si no se encuentra un número
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Uso: python tu_script.py archivo.txt")
+    else:
+        input_file = sys.argv[1]
+        solver = NumberLinkSolver(input_file)
+        if solver.rows > 0 and solver.cols > 0 and solver.board is not None:
+            print("Tablero de entrada:")
+            solver.print_board()
+            choice = input("Elige: (1) Jugar manualmente (2) Resolver automáticamente: ")
+            if choice == "2":
+                solver.generate_path()
+                solver.print_board()
+            else:
+                solver.play()
+        else:
+            print("No se pudo cargar el tablero inicial. Verifica el archivo de entrada.")
