@@ -143,7 +143,7 @@ class NumberLinkSolver:
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.board[i][j] == str(number):
-                    coordinates.append((i+1, j+1))
+                    coordinates.append((i + 1, j + 1))
         return coordinates
 
     def group_numbers(self):
@@ -210,6 +210,7 @@ class NumberLinkSolver:
                 (row, col - 1),
                 (row, col + 1)
             ]
+
 
             for move in possible_moves:
                 if (
