@@ -1,6 +1,7 @@
 import sys
 from collections import deque
 
+
 class NumberLinkSolver:
     def __init__(self, filename):
         try:
@@ -98,27 +99,27 @@ class NumberLinkSolver:
                     continue
 
     def is_valid_move(self, row1, col1, row2, col2):
-            # Verifica si el movimiento es válido (celdas adyacentes y vacías)
-            if (
+        # Verifica si el movimiento es válido (celdas adyacentes y vacías)
+        if (
                 1 <= row1 <= self.rows
                 and 1 <= col1 <= self.cols
                 and 1 <= row2 <= self.rows
                 and 1 <= col2 <= self.cols
                 and (
-                    abs(row1 - row2) == 1
-                    and col1 == col2
-                    or abs(col1 - col2) == 1
-                    and row1 == row2
-                )
+                abs(row1 - row2) == 1
+                and col1 == col2
+                or abs(col1 - col2) == 1
+                and row1 == row2
+        )
                 and self.board[row2 - 1][col2 - 1] == " "
                 and self.board[row1 - 1][col1 - 1] == " "
                 and ((row1, col1), (row2, col2)) not in self.connections
                 and ((row2, col2), (row1, col1)) not in self.connections
                 and ((row1, col1), (row2, col2)) not in self.original_numbers.keys()
                 and ((row2, col2), (row1, col1)) not in self.original_numbers.keys()
-            ):
-                return True
-            return False
+        ):
+            return True
+        return False
 
     def connect_single_cell(self, row, col, number_to_connect):
         # Conecta una sola celda en el tablero con un número específico
@@ -131,19 +132,18 @@ class NumberLinkSolver:
         self.connections.append(((row1, col1), (row2, col2)))
 
     def is_game_over(self):
-    # Verifica si se ha completado el juego
+        # Verifica si se ha completado el juego
         for row in self.board:
             if " " in row or "X" in row:  # Se añade "X" a las condiciones de finalización del juego
                 return False
         return True
 
     def find_number_coordinates(self, number):
-        # Encuentra las coordenadas de un número en el tablero
         coordinates = []
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.board[i][j] == str(number):
-                    coordinates.append((i + 1, j + 1))  # Sumamos 1 para ajustar a la indexación del juego
+                    coordinates.append((i+1, j+1))
         return coordinates
 
     def group_numbers(self):
@@ -171,33 +171,27 @@ class NumberLinkSolver:
                         end = group[j]
                         print(f"Buscando camino entre {start} y {end} para el número {number}...")
                         found_paths = self.find_all_paths(start, end)
+
                         if found_paths:
-                            for found_path in found_paths:
-                                # Obtener la longitud de la ruta actual
-                                path_length = len(found_path) - 1
-                                # Verificar si ya se ha encontrado una ruta para este número
-                                if (
-                                    (end, path_length) not in shortest_paths[number]
-                                    or path_length < shortest_paths[number][(end, path_length)]
-                                ):
-                                    # Registrar la ruta más corta para este número y su longitud
-                                    shortest_paths[number][(end, path_length)] = path_length
-                                    # Actualizar el tablero solo con la ruta más corta encontrada
-                                    for coord in found_path[1:-1]:
-                                        row, col = coord
-                                        if (row, col) not in self.original_numbers:
-                                            self.board[row - 1][col - 1] = str(number)
-                                    print(f"Tablero después de encontrar la ruta entre {start} y {end} para el número {number}:")
-                                    self.print_board()
-                        else:
-                            print(f"No se encontró un camino entre {start} y {end} para el número {number}.")
+                            shortest_path = min(found_paths, key=len)
+                            path_length = len(shortest_path) - 1
+                            if end not in shortest_paths[number] or path_length < len(shortest_paths[number][end]):
+                                shortest_paths[number][end] = shortest_path
+
+        # Actualizar el tablero con las rutas más cortas encontradas
+        for number, paths in shortest_paths.items():
+            for path in paths.values():
+                for coord in path[1:-1]:
+                    row, col = coord
+                    if self.board[row - 1][col - 1] == " ":
+                        self.board[row - 1][col - 1] = str(number)
 
         print("Tablero después de la resolución:")
         self.print_board()
 
     def find_all_paths(self, start, end):
         queue = deque()
-        queue.append((start, [start]))  
+        queue.append((start, [start]))
 
         all_paths = []
         visited = set()
@@ -211,97 +205,23 @@ class NumberLinkSolver:
 
             # Direcciones posibles
             possible_moves = [
-                (row - 1, col), (row + 1, col),
-                (row, col - 1), (row, col + 1),
-                (row - 2, col - 1), (row - 2, col + 1),
-                (row + 2, col - 1), (row + 2, col + 1),
-                (row - 1, col - 2), (row + 1, col - 2),
-                (row - 1, col + 2), (row + 1, col + 2)
-            ]
-
-            for move in possible_moves:
-                if (
-                    0 <= move[0] < self.rows and
-                    0 <= move[1] < self.cols and
-                    (self.board[move[0]][move[1]] == " " or self.board[move[0]][move[1]] == str(end)) and
-                    move not in path and move not in visited
-                ):
-                    if start != end:
-                        shortest_path = self.bfs_shortest_path(current, end)
-                        if shortest_path:
-                            all_paths.append(path + shortest_path[1:])
-                            continue
-                    queue.append((move, path + [move]))
-                    visited.add(move)
-        return all_paths
-
-    def bfs_shortest_path(self, start, end):
-        queue = deque()
-        queue.append(start)
-        visited = set()
-        visited.add(start)
-        parents = {}
-
-        while queue:
-            current = queue.popleft()
-            if current == end:
-                path = []
-                while current != start:
-                    path.append(current)
-                    current = parents[current]
-                path.append(start)
-                return path[::-1]
-
-            row, col = current
-            neighbors = [
                 (row - 1, col),
                 (row + 1, col),
                 (row, col - 1),
                 (row, col + 1)
             ]
 
-            for neighbor in neighbors:
+            for move in possible_moves:
                 if (
-                    0 <= neighbor[0] < self.rows and
-                    0 <= neighbor[1] < self.cols and
-                    self.board[neighbor[0]][neighbor[1]] == " " and
-                    neighbor not in visited
+                        0 <= move[0] < self.rows and
+                        0 <= move[1] < self.cols and
+                        (self.board[move[0]][move[1]] == " " or self.board[move[0]][move[1]] == str(end)) and
+                        move not in path and move not in visited
                 ):
-                    queue.append(neighbor)
-                    visited.add(neighbor)
-                    parents[neighbor] = current
+                    queue.append((move, path + [move]))
+                    visited.add(move)
+        return all_paths
 
-        return None  # Si no se encuentra un camino
-
-    def solve_exhaustively(self):
-        # Encuentra una solución exhaustivamente
-        self.exhaustive_solution_found = False  # Variable para verificar si se encontró una solución
-        self.exhaustive_search(1)
-
-        if self.exhaustive_solution_found:
-            print("¡Se encontró una solución!")
-            self.print_board()
-        else:
-            print("No se encontró una solución.")
-
-    def exhaustive_search(self, number_to_connect):
-        if number_to_connect > max(self.original_numbers.values()):
-            self.exhaustive_solution_found = True
-            return
-
-        for row1 in range(1, self.rows + 1):
-            for col1 in range(1, self.cols + 1):
-                if self.board[row1 - 1][col1 - 1] == " ":
-                    for row2 in range(1, self.rows + 1):
-                        for col2 in range(1, self.cols + 1):
-                            if self.board[row2 - 1][col2 - 1] == " ":
-                                if self.is_valid_move(row1, col1, row2, col2):
-                                    self.connect_cells(row1, col1, row2, col2, str(number_to_connect))
-                                    self.exhaustive_search(number_to_connect + 1)
-                                    if self.exhaustive_solution_found:
-                                        return
-                                    self.board[row1 - 1][col1 - 1] = " "
-                                    self.board[row2 - 1][col2 - 1] = " "
 
 def main():
     print("Bienvenido al juego NumberLink")
@@ -310,7 +230,8 @@ def main():
     # Tomar la decisión del usuario
     decision_usuario = input().strip().lower()
     if decision_usuario not in ["s", "n", "q"]:
-        print("Por favor, ingresa 's' para resolverlo tú mismo, 'n' para dejar que la máquina lo haga, o 'q' para salir.")
+        print(
+            "Por favor, ingresa 's' para resolverlo tú mismo, 'n' para dejar que la máquina lo haga, o 'q' para salir.")
         return
 
     if decision_usuario == "q":
@@ -333,7 +254,6 @@ def main():
     print("Tablero de entrada:")
     solver.print_board()
 
-
     # Jugar o resolver automáticamente según la elección del usuario
     if decision_usuario == "s":
         solver.play()  # Juego manual
@@ -343,5 +263,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
